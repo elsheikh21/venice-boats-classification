@@ -1,0 +1,32 @@
+DB sc5-2013-Mar-Apr
+
+Num categories = 24
+Num samples = 4774
+
+File names = [20130304_054052_03905.jpg...20130410_173603_11237.jpg]
+
+	  113	Alilaguna
+	   85	Ambulanza
+	  112	Barchino
+	   34	Cacciapesca
+	    1	Caorlina
+	   24	Gondola
+	   22	Lanciafino10m
+	  484	Lanciafino10mBianca
+	  355	Lanciafino10mMarrone
+	    0	Lanciamaggioredi10m
+	    9	Lanciamaggioredi10mBianca
+	    5	Lanciamaggioredi10mMarrone
+	  215	Motobarca
+	   18	Motopontonerettangolare
+	   11	MotoscafoACTV
+	  878	Mototopo
+	  279	Patanella
+	   71	Polizia
+	   94	Raccoltarifiuti
+	   13	Sandoloaremi
+	    5	Sanpierota
+	   78	Topa
+	  949	VaporettoACTV
+	   12	VigilidelFuoco
+      907	Water
