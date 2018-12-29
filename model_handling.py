@@ -38,7 +38,8 @@ def poly_decay(epoch):
     return alpha
 
 
-def t_model_vary_lr(image_size, num_classes):
+def t_model_vary_lr(image_size, num_classes, view_model=True,
+                    weights_path=None):
     model = Sequential()
     model.add(Conv2D(32, (3, 5), input_shape=(
         image_size, image_size, 3)))  # 3 is the depth
@@ -66,7 +67,13 @@ def t_model_vary_lr(image_size, num_classes):
     opt = SGD(lr=init_lr, momentum=0.9, nesterov=True)
     model.compile(loss="categorical_crossentropy", optimizer=opt,
                   metrics=["accuracy"])
-    print(model.summary())
+
+    if weights_path is not None:
+        model.load_weights(weights_path)
+
+    if(view_model):
+        print(model.summary())
+
     return model
 
 
@@ -94,7 +101,6 @@ def fit_model_varying_lr(model, train_generator, validation_generator):
 
 
 def plot_model_acc(history):
-    # summarize history for accuracy
     plt.plot(history.history['acc'])
     plt.plot(history.history['val_acc'])
     plt.title('model accuracy')
@@ -115,7 +121,7 @@ def plot_model_loss(history):
     plt.show()
 
 
-def eval_predict_model(model, test_generator, y_true):
+def eval_predict_model(model, test_generator, y_true, save_model=True):
     predictions = model.predict_generator(
         test_generator, test_generator.n // test_generator.batch_size,
         verbose=1
@@ -124,12 +130,17 @@ def eval_predict_model(model, test_generator, y_true):
     y_pred = np.argmax(predictions, axis=1)
 
     acc = round(accuracy_score(y_true, y_pred) * 100.0, 2)
-    print('\nThe Accuracy score is: {}% \n'.format(str(acc)))
-    print('The Classification Report: \n',
+    print('\nThe Accuracy score is: {} % \n'.format(str(acc)))
+    print('\nThe Classification Report: \n',
           classification_report(y_true, y_pred))
 
     scores = model.evaluate_generator(
         test_generator, test_generator.n // test_generator.batch_size,
         verbose=1
     )
+
+    if(save_model):
+        model.save('model.h5')
+        model.save_weights('model_weights.h5')
+
     return predictions, scores
