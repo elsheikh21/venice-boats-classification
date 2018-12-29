@@ -1,49 +1,39 @@
-from set_directory_variables import directory_vars
-from data_handling import (prepare_data, preprocess_images)
-from cnn_models import (lenet_model, fit_save_lenet_model,
-                        predict_eval_lenet_model, vgg_16,
-                        fit_save_vgg_16_model,
-                        predict_eval_vgg_16_model)
+import os
+from numpy.random import seed
+from tensorflow import set_random_seed
 
-# To use the alexnet models, just uncomment this import
-# from cnn_models import (alexnet_model, fit_save_alexnet_model,
-# predict_eval_alexnet_model)
+from dir_vars import directory_vars
+from data_processing import generate_augment_data
+from model_handling import (
+    t_model_vary_lr, fit_model_varying_lr,
+    plot_model_acc, plot_model_loss, eval_predict_model)
 
-# Step 1: set our directory variables
+# Disable tensorflow gpu basic log
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+
+# To ensure reproducibility
+seed(1)
+set_random_seed(2)
+
+# Setting the environment variables
 training_dir, testing_dir, ground_truth_dir = directory_vars()
 
-#  Step2: Data preprocessing & augmentation
-train_datagen, test_datagen = preprocess_images()
+# Generate augmented data from data generators
+(train_generator, validation_generator,
+ test_generator, y_true, num_classes) = generate_augment_data(training_dir,
+                                                              testing_dir,
+                                                              ground_truth_dir)
 
-# Step3: Prepare the data
-train_generator, test_generator, train_num_classes = prepare_data(
-    32, train_datagen, test_datagen, training_dir,
-    testing_dir, ground_truth_dir, True)
+# Init the model
+model = t_model_vary_lr(image_size=256, num_classes=num_classes)
 
-# Step4: Training Our model
-# LeNet Model
-lenet_model = lenet_model(img_shape=(256, 256, 3),
-                          train_classes=train_num_classes,
-                          weights_path=None, visualize_summary=True)
+# Fit the model
+model_history = fit_model_varying_lr(
+    model, train_generator, validation_generator)
 
-fit_save_lenet_model(lenet_model, train_generator, save_model=True)
+# Plot model history(acc, val_acc, loss, val_loss)
+plot_model_acc(model_history)
+plot_model_loss(model_history)
 
-# AlexNet Model
-# alexnet_model = alexnet_model(img_shape=(256, 256, 3),
-#                               n_classes=train_num_classes, l2_reg=0.0,
-#                               weights=None, visualize_summary=True)
-
-# fit_save_alexnet_model(alexnet_model, train_generator, save_model=True)
-
-# VGG16 Model
-vgg16_model = vgg_16(img_size=(256, 256, 3),
-                     weights_path=None, visualize_summary=True)
-
-fit_save_vgg_16_model(lenet_model, train_generator, save_model=True)
-
-# Step5: Test our model
-test_lenet_model = predict_eval_lenet_model(lenet_model, test_generator)
-
-# test_alexnet_model = predict_eval_alexnet_model(alexnet_model, test_generator)
-
-test_vgg16_model = predict_eval_vgg_16_model(vgg16_model, test_generator)
+# Test the model
+predictions, scores = eval_predict_model(model, test_generator, y_true)
