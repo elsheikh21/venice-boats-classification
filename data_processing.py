@@ -10,13 +10,16 @@ image_size = 256
 
 def generate_augment_data(training_dir, testing_dir, ground_truth_dir,
                           view_img=True, num_imgs=12):
+    #   To ensure consistency for our experiments
+    x = np.random.seed(7)
     data_generator = ImageDataGenerator(
         rotation_range=360,
-        zoom_range=0.05,
-        width_shift_range=0.05,
-        height_shift_range=0.05,
-        shear_range=0.05,
+        zoom_range=0.2,
+        width_shift_range=0.2,
+        height_shift_range=0.2,
+        shear_range=0.2,
         horizontal_flip=True,
+        vertical_flip=True,
         validation_split=0.2
     )
 
@@ -27,7 +30,8 @@ def generate_augment_data(training_dir, testing_dir, ground_truth_dir,
         batch_size=batch_size,
         subset='training',
         shuffle=False,
-        target_size=(image_size, image_size)
+        target_size=(image_size, image_size),
+        seed=x
     )
 
     num_classes = len(train_generator.class_indices)
@@ -39,7 +43,8 @@ def generate_augment_data(training_dir, testing_dir, ground_truth_dir,
         batch_size=batch_size,
         subset='validation',
         shuffle=False,
-        target_size=(image_size, image_size)
+        target_size=(image_size, image_size),
+        seed=x
     )
 
     df = pd.read_csv(ground_truth_dir, delimiter=';')
@@ -77,7 +82,7 @@ def generate_augment_data(training_dir, testing_dir, ground_truth_dir,
         # Get 12 samples of our augmented image
         aug_images = [next(aug_iter)[0].astype(np.uint8)
                       for i in range(num_imgs)]
-        plots(aug_images, figsize=(40, 10), rows=3)
+        plots(aug_images, figsize=(80, 40), rows=6)
 
     return (train_generator, validation_generator,
             test_generator, y_true, num_classes)

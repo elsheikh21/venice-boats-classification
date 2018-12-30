@@ -13,15 +13,14 @@ from tensorflow.python.keras.callbacks import CSVLogger
 from tensorflow.python.keras.layers import (
     Flatten, BatchNormalization, Dropout)
 
+# Tune out the learning rate
+num_epochs = 100
+init_lr = 1e-6
+
 
 def integer_encoding(data):
     encoder = LabelEncoder()
     return encoder.fit_transform(data)
-
-
-# Tune out the learning rate
-num_epochs = 100
-init_lr = 1e-6
 
 
 def poly_decay(epoch):
@@ -38,16 +37,49 @@ def poly_decay(epoch):
     return alpha
 
 
+def lenet_model_vary_lr(image_size, num_classes, view_model=True):
+    model = Sequential()
+
+    # first set of CONV => RELU => POOL
+    model.add(Conv2D(20, (5, 5), input_shape=(
+        image_size, image_size, 3)))
+    model.add(Activation("relu"))
+    model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
+
+    # second set of CONV => RELU => POOL
+    model.add(Conv2D(50, (5, 5)))
+    model.add(Activation("relu"))
+    model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
+
+    # set of FC => RELU layers
+    model.add(Flatten())
+    model.add(Dense(500))
+    model.add(Activation("relu"))
+
+    # softmax classifier
+    model.add(Dense(num_classes))
+    model.add(Activation("softmax"))
+
+    opt = SGD(lr=init_lr, momentum=0.9, nesterov=True)
+    model.compile(loss="categorical_crossentropy", optimizer=opt,
+                  metrics=["accuracy"])
+
+    if(view_model):
+        print(model.summary())
+
+    return model
+
+
 def t_model_vary_lr(image_size, num_classes, view_model=True,
                     weights_path=None):
     model = Sequential()
     model.add(Conv2D(32, (3, 5), input_shape=(
-        image_size, image_size, 3)))  # 3 is the depth
+        image_size, image_size, 3)))
     model.add(Activation('relu'))
     model.add(MaxPooling2D(pool_size=(2, 2)))
 
     model.add(ZeroPadding2D((1, 1)))
-    model.add(Conv2D(32, (3, 5)))  # (height, width) kernel - 3x3 or 3x5
+    model.add(Conv2D(32, (3, 5)))
     model.add(Activation('relu'))
     model.add(MaxPooling2D(pool_size=(2, 2)))
 
@@ -61,6 +93,47 @@ def t_model_vary_lr(image_size, num_classes, view_model=True,
     model.add(Dense(64))
     model.add(Activation('relu'))
     model.add(Dropout(0.7))  # 0.5 good value
+    model.add(Dense(num_classes))
+    model.add(Activation('softmax'))
+
+    opt = SGD(lr=init_lr, momentum=0.9, nesterov=True)
+    model.compile(loss="categorical_crossentropy", optimizer=opt,
+                  metrics=["accuracy"])
+
+    if weights_path is not None:
+        model.load_weights(weights_path)
+
+    if(view_model):
+        print(model.summary())
+
+    return model
+
+
+def ta_model_vary_lr(image_size, num_classes, view_model=True,
+                     weights_path=None):
+    model = Sequential()
+    model.add(Conv2D(32, (3, 5), input_shape=(
+        image_size, image_size, 3)))
+    model.add(Activation('relu'))
+    model.add(MaxPooling2D(pool_size=(2, 2)))
+
+    model.add(ZeroPadding2D((1, 1)))
+    model.add(Conv2D(32, (3, 5)))
+    model.add(Activation('relu'))
+    model.add(MaxPooling2D(pool_size=(2, 2)))
+    model.add(Dropout(0.7))
+
+    model.add(ZeroPadding2D((1, 1)))
+    model.add(Conv2D(64, (3, 5)))
+    model.add(BatchNormalization())
+    model.add(Activation('relu'))
+    model.add(MaxPooling2D(pool_size=(2, 2)))
+    model.add(Dropout(0.7))
+
+    model.add(Flatten())
+    model.add(Dense(64))
+    model.add(Activation('relu'))
+    model.add(Dropout(0.7))
     model.add(Dense(num_classes))
     model.add(Activation('softmax'))
 
@@ -121,7 +194,8 @@ def plot_model_loss(history):
     plt.show()
 
 
-def eval_predict_model(model, test_generator, y_true, save_model=True):
+def eval_predict_model(model, test_generator, y_true,
+                       save_model=True, save_name='trail'):
     predictions = model.predict_generator(
         test_generator, test_generator.n // test_generator.batch_size,
         verbose=1
@@ -140,7 +214,7 @@ def eval_predict_model(model, test_generator, y_true, save_model=True):
     )
 
     if(save_model):
-        model.save('model.h5')
-        model.save_weights('model_weights.h5')
+        model.save('{} model.h5'.format(save_name))
+        model.save_weights('{} model_weights.h5'.format(save_name))
 
     return predictions, scores
