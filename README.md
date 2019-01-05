@@ -13,14 +13,13 @@ this repo runs on python 3.6.4(x64), and pip (18.1). You can install the python 
 
 ## Dataset
 
-- Downloaded from ([here](http://www.diag.uniroma1.it/~labrococo/MAR/classification.htm))
-- 4774 training images, 1969 testing images
+  - Downloaded from ([here](http://www.diag.uniroma1.it/~labrococo/MAR/classification.htm))
 
-  - the dataset was altered, to get a number of matching classes between the training and testing classes. So we end up with 19 classes. &nbsp;
+  - 4774 training images, 1969 testing images
 
----
+    - the dataset was altered, to get a number of matching classes between the training and testing classes. So we end up with 19 classes. &nbsp;
 
-Note folders removed names are hard coded in the code for that purpose
+    - Note folders removed names are hard coded in the code for that purpose
 
 ---
 
